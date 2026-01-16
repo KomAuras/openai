@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="robots" content="noindex, nofollow"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .kbds {
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 0.1em 0.5em;
+            margin: 0 0.2em;
+            box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff inset;
+            background-color: #f7f7f7;
+        }
+
+        .error_text {
+            color: red;
+        }
+
+        ul.opai {
+            padding-left: 20px;
+        }
+
+        ul.opai li {
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<h1>OpenAI</h1>
+
+<form action="?plugin=openai&module=settings&action=save" method="post" id="plugins-settings-form"
+      class="fields form">
+    {$wa->csrf()}
+
+    <h2>Настройки Proxy</h2>
+
+    <div class="field">
+        <div class="name">Адрес сервера</div>
+        <div class="value">
+            <input type="text" name="settings[proxy_address]"
+                   value="{$settings.proxy_address|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">Порт сервера</div>
+        <div class="value">
+            <input type="text" name="settings[proxy_port]"
+                   value="{$settings.proxy_port|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">Логин сервера</div>
+        <div class="value">
+            <input type="text" name="settings[proxy_login]"
+                   value="{$settings.proxy_login|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">Пароль сервера</div>
+        <div class="value">
+            <input type="password" name="settings[proxy_password]"
+                   value="{$settings.proxy_password|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <h2>Настройки запроса к OpenAI</h2>
+
+    <div class="field">
+        <div class="name">OpenAI ApiKey</div>
+        <div class="value">
+            <input type="text" name="settings[api_key]"
+                   value="{$settings.api_key|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">OpenAI model</div>
+        <div class="value">
+            <input type="text" name="settings[openai_model]"
+                   value="{$settings.openai_model|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">Шаблон запроса</div>
+        <div class="value">
+            <textarea style="width:100%" class="test_request"
+                      name="settings[request_template]">{ifset($settings.request_template)|escape}</textarea>
+            <p>Макросы: <br>
+                <span class="kbds">@url</span> - ссылка на страницу с товаром</p>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="value submit">
+            <input type="submit" class="button green" value="[`Save`]">
+            <span id="plugins-settings-form-status" style="display:none"><i style="vertical-align:middle"
+                                                                            class="icon16 yes"></i> [`Saved`] </span>
+        </div>
+    </div>
+
+    <hr style="margin-top: 15px">
+
+    <h2>Тестирование запроса</h2>
+
+    <div class="field">
+        <div class="name">Ссылка на тестовый товар</div>
+        <div class="value">
+            <input type="text" name="settings[test_url]" class="test_url"
+                   style="width:100%" value="{$settings.test_url|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">Результат тестового запроса по шаблону</div>
+        <div class="value">
+            <textarea style="width:100%" id="openai_test_result"></textarea>
+            <div id="error_text" class="error_text hidden"></div>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="value submit">
+            <input type="submit" class="button blue call_openai_test" value="Выполнить">
+            <span class="openai_loader hidden"><img src="/wa-content/img/loading16.gif"></span>
+        </div>
+    </div>
+
+    {literal}
+    <script type="text/javascript">
+        $('.call_openai_test').bind('click', function (ee) {
+            ee.preventDefault();
+            let testUrl = $(".test_url").val();
+            let testRequest = $(".test_request").val();
+            $(".openai_loader").show();
+            $("#error_text").hide();
+            $.getJSON('?module=openai&action=PluginBackendAjax', {
+                testUrl: testUrl,
+                testRequest: testRequest
+            }, function (json) {
+                $("#openai_test_result").val(json.data.status_text);
+                $("#error_text").text(json.data.error_text);
+                $(".openai_loader").hide();
+                $("#error_text").show();
+            }).fail(function () {
+                $("#error_text").text(json.data.error_text);
+                $(".openai_loader").hide();
+                $("#error_text").show();
+                alert("Ошибка при выполнении Ajax запроса.");
+            });
+        });
+    </script>
+    {/literal}
+
+    <hr style="margin-top: 15px">
+    <div>
+        <h2>Информация</h2>
+        <ul class="opai">
+            <li>Не забудьте добавить характеристику <span class="kbds">openai</span> типа булево.</li>
+            <li>Фоновая задача обрабатывает номенклатуру у которой характеристика <span class="kbds">openai</span> типа
+                булево установлена в Да. После обработки характеристика изменяется в Нет.
+            </li>
+            <li>Журналы плагина находятся в папке [root]/wa-log/shop/plugins/openai/</li>
+            <li>Назначьте данную команду в CRON для автоматической обработки номенклатуры.
+                <textarea style="width:100%">{$cron}</textarea>
+            </li>
+            <li>Крайне желательно что бы текст запроса дополнялся в конце следующим текстом что бы openai генерировал
+                нужный результат для работы плагина.<br>Ну и нужно бы сказать что характеристики должны разделяться
+                символом @ для дальнейшего разбора php
+            </li>
+            <textarea style="width:100%">Вывод в виде JSON:
+[{
+  "name": "текст заголовка",
+  "description": "текст описания",
+  "characters": "текст характеристик"
+}]
+</textarea>
+
+        </ul>
+
+    </div>
+</form>
+</body>
+</html>
