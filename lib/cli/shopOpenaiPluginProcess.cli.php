@@ -73,6 +73,16 @@ class shopOpenaiPluginProcessCli extends waCliController
             // получаем ссылку на товар
             $product = new shopProduct($productID);
 
+            // получаем ссылку на изображение товара
+            $imageUrl = "";
+            if (count($product->images)) {
+                waLog::dump($product->images);
+                foreach ($product->images as $image) {
+                    $imageUrl = wa()->getRouting()->getDomains()[0] . shopImage::getUrl($image);
+                    break;
+                }
+            }
+
             /**
              * Cнимем галку с характеристики openai до того как обратимся к openai
              * что бы в случае невозможности ее снятия не скрипт не долбился в
@@ -89,7 +99,7 @@ class shopOpenaiPluginProcessCli extends waCliController
             $url = $product->getProductUrl(true, true, false);
             // обрабатываем ссылку в openai по шаблону
             try {
-                $result = $class->getDataResponce($url);
+                $result = $class->getDataResponce($url, $imageUrl);
                 echo "обработали: " . $productID . " " . $url . "\n";
             } catch (Exception $e) {
                 waLog::log("Исключение при обращении к openai: " . $e->getMessage(), $this::FILE_LOG);

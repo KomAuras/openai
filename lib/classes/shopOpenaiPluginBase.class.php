@@ -51,31 +51,44 @@ class shopOpenaiPluginBase
      * - json - результат декодированный из JSON
      * - error - текст ошибки если была
      */
-    public function getDataResponce($url, $template = "")
+    public function getDataResponce(string $url, string $image = "", string $template = ""): array
     {
-        $text = $this->getTextFromTemplate($url, $template);
-
-        $response = $this->client->responses()->create([
-            'model' => $this->openai_model,
-            'input' => $text,
-        ]);
-
         $result = [
-            'response' => $response->outputText,
+            'response' => "",
             'json' => "",
-            'error' => "",
+            'error' => ""
         ];
 
+        $text = $this->getTextFromTemplate($url, $template);
+
+        $response = $this->client->chat()->create([
+            'model' => $this->openai_model,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        ['type' => 'text', 'text' => $text],
+                        ['type' => 'image_url', 'image_url' => ['url' => $image]],
+                    ],
+                ],
+            ],
+        ]);
+
         try {
-            $json = json_decode($response->outputText, true);
-            if (json_last_error()) {
-                throw new Exception("Ошибка декодирования JSON: " . json_last_error_msg());
+            $result['response'] = $response->choices[0]->message->content;
+            try {
+                $json = json_decode($result['response'], true);
+                if (json_last_error()) {
+                    throw new Exception("Ошибка декодирования JSON: " . json_last_error_msg());
+                }
+                $result['json'] = $json;
+            } catch (Exception $e) {
+                $result['error'] = $e->getMessage();
             }
-            $result['json'] = $json;
+
         } catch (Exception $e) {
             $result['error'] = $e->getMessage();
         }
-
         return $result;
     }
 

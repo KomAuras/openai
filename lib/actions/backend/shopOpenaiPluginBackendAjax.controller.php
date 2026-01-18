@@ -9,6 +9,11 @@ class shopOpenaiPluginBackendAjaxController extends waJsonController
             return $this->setResult("", "Установите тестовую ссылку");
         }
 
+        $testImage = $_GET['testImage'];
+        if ($testImage == "") {
+            return $this->setResult("", "Установите тестовую картинку");
+        }
+
         $testRequest = $_GET['testRequest'];
         if ($testRequest == "") {
             return $this->setResult("", "Установите шаблон");
@@ -16,7 +21,7 @@ class shopOpenaiPluginBackendAjaxController extends waJsonController
 
         try {
             $class = new shopOpenaiPluginBase();
-            $result = $class->getDataResponce($testUrl, $testRequest);
+            $result = $class->getDataResponce($testUrl, $testImage, $testRequest);
         } catch (Exception $e) {
             $result['error'] = $e->getMessage();
         }

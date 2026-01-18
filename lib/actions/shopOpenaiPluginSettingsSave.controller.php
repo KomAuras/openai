@@ -16,6 +16,7 @@ class shopOpenaiPluginSettingsSaveController extends waJsonController
                 'openai_model' => $post['openai_model'],
                 'request_template' => $post['request_template'],
                 'test_url' => $post['test_url'],
+                'test_image' => $post['test_image'],
             );
 
             wa()->getplugin('openai')->savesettings($settings);
