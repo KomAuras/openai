@@ -42,10 +42,10 @@ class shopOpenaiPluginProcessCli extends waCliController
         */
 
         $sql = <<<EOF
-            SELECT 
+            SELECT
                 p.id as product_id,
-                p.url 
-            FROM 
+                p.url
+            FROM
                 shop_product as p
                 JOIN shop_product_features as pf on pf.product_id = p.id
                 JOIN shop_feature as f on f.code = 'openai' and f.id = pf.feature_id
@@ -78,7 +78,7 @@ class shopOpenaiPluginProcessCli extends waCliController
             if (count($product->images)) {
                 waLog::dump($product->images);
                 foreach ($product->images as $image) {
-                    $imageUrl = wa()->getRouting()->getDomains()[0] . shopImage::getUrl($image);
+                    $imageUrl = 'https://' . wa()->getRouting()->getDomains()[0] . shopImage::getUrl($image);
                     break;
                 }
             }
