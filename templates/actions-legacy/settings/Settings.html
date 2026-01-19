@@ -25,10 +25,11 @@
 
         ul.opai {
             padding-left: 20px;
+            list-style-type: circle;
         }
 
         ul.opai li {
-            padding-top: 5px;
+            padding: 5px 0px 5px 0px;
         }
     </style>
 </head>
@@ -92,12 +93,27 @@
     </div>
 
     <div class="field">
+        <div class="name">Ссылка на тестовый товар</div>
+        <div class="value">
+            <input type="text" name="settings[test_url]" class="test_url"
+                   value="{$settings.test_url|escape}"/><br/><br/>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="name">Ссылка на тестовую картинку</div>
+        <div class="value">
+            <input type="text" name="settings[test_image]" class="test_image"
+                   value="{$settings.test_image|escape}"/><br/>
+            <span class="hint">передается в openai внутри плагина. не требуется прописывать в шаблоне</span>
+        </div>
+    </div>
+
+    <div class="field">
         <div class="name">Шаблон запроса</div>
         <div class="value">
-            <textarea style="width:100%" class="test_request"
-                      name="settings[request_template]">{ifset($settings.request_template)|escape}</textarea>
-            <p>Макросы: <br>
-                <span class="kbds">@url</span> - ссылка на страницу с товаром</p>
+            <textarea style="height: auto; width: 100%" class="test_request" rows=30 name="settings[request_template]">{ifset($settings.request_template)|escape}</textarea>
+            <p class="hint">Макросы: <span class="kbds">@url</span> - ссылка на страницу с товаром</p>
         </div>
     </div>
 
@@ -111,29 +127,12 @@
 
     <hr style="margin-top: 15px">
 
-    <h2>Тестирование запроса</h2>
-
-    <div class="field">
-        <div class="name">Ссылка на тестовый товар</div>
-        <div class="value">
-            <input type="text" name="settings[test_url]" class="test_url"
-                   style="width:100%" value="{$settings.test_url|escape}"/><br/><br/>
-        </div>
-    </div>
-
-    <div class="field">
-        <div class="name">Ссылка на тестовую картинку</div>
-        <div class="value">
-            <input type="text" name="settings[test_image]" class="test_image"
-                   style="width:100%" value="{$settings.test_image|escape}"/><br/>передается в openai внутри плагина. не
-            требуется прописывать в шаблоне<br/>
-        </div>
-    </div>
+    <h2>Проверить шаблон</h2>
 
     <div class="field">
         <div class="name">Результат тестового запроса по шаблону</div>
         <div class="value">
-            <textarea style="width:100%" id="openai_test_result"></textarea>
+            <textarea style="width:100%;height: auto" rows=6 id="openai_test_result"></textarea>
             <div id="error_text" class="error_text hidden"></div>
         </div>
     </div>
@@ -174,34 +173,32 @@
     {/literal}
 
     <hr style="margin-top: 15px">
-    <div>
-        <h2>Информация</h2>
-        <ul class="opai">
-            <li>Не забудьте добавить характеристику <span class="kbds">openai</span> типа булево.</li>
-            <li>Фоновая задача обрабатывает номенклатуру у которой характеристика <span class="kbds">openai</span> типа
-                булево установлена в Да. После обработки характеристика изменяется в Нет.
-            </li>
-            <li>Журналы плагина находятся в папке [root]/wa-log/shop/plugins/openai/</li>
-            <li>Назначьте данную команду в CRON для автоматической обработки номенклатуры.
-                <textarea style="width:100%">{$cron}</textarea>
-            </li>
-            <li>Крайне желательно что бы текст запроса дополнялся в конце следующим текстом что бы openai генерировал
-                нужный результат для работы плагина.<br>В шаблоне желательно написать то что картинка товара
-                прилагается. Она передается в плагине, не в шаблоне.<br>Ну и нужно бы сказать что характеристики должны
-                разделяться
-                символом @ для дальнейшего разбора php
-            </li>
-            <textarea style="width:100%">Вывод в виде JSON:
+    <h2>Информация</h2>
+    <ul class="opai">
+        <li>Не забудьте добавить характеристику <span class="kbds">openai</span> типа булево. Фоновая задача
+            обрабатывает номенклатуру у которой характеристика <span class="kbds">openai</span> типа булево
+            установлена в Да. После обработки характеристика изменяется в Нет.
+        </li>
+        <li>Назначьте данную команду в CRON для автоматической обработки номенклатуры.
+            <div class="kbds">{$cron}</div>
+        </li>
+        <li>Журналы плагина находятся в папке [root]/wa-log/shop/plugins/openai/</li>
+        <li>Крайне желательно что бы текст запроса дополнялся в конце следующим текстом что бы openai генерировал
+            нужный результат для работы плагина.
+        </li>
+        <li>В шаблоне желательно написать то что картинка товара прилагается. Она передается в плагине, не в
+            шаблоне.
+        </li>
+        <li>Ну и нужно бы сказать что характеристики должны разделяться символом @ для дальнейшего разбора php
+        </li>
+        <pre style="background-color: lightgrey">Вывод в виде JSON:
 [{
   "name": "текст заголовка",
   "description": "текст описания",
   "characters": "текст характеристик"
 }]
-</textarea>
-
-        </ul>
-
-    </div>
+</pre>
+    </ul>
 </form>
 </body>
 </html>
