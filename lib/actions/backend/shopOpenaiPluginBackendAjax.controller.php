@@ -2,6 +2,8 @@
 
 class shopOpenaiPluginBackendAjaxController extends waJsonController
 {
+    const FILE_LOG = 'shop/plugins/openai/openai.log';
+
     public function execute(): array
     {
         $testUrl = $_GET['testUrl'];
@@ -25,7 +27,10 @@ class shopOpenaiPluginBackendAjaxController extends waJsonController
         } catch (Exception $e) {
             $result['error'] = $e->getMessage();
         }
-
+        waLog::log($testRequest, $this::FILE_LOG);
+        waLog::log($testUrl, $this::FILE_LOG);
+        waLog::log($testImage, $this::FILE_LOG);
+        waLog::dump($result, $this::FILE_LOG);
         return $this->setResult($result['response'], $result['error']);
     }
 
