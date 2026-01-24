@@ -12,10 +12,11 @@ class shopOpenaiPluginSettingsAction extends waViewAction
             'proxy_login' => ($_settings['proxy_login'] ?? ""),
             'proxy_password' => ($_settings['proxy_password'] ?? ""),
             'api_key' => ($_settings['api_key'] ?? ""),
-            'openai_model' => ($_settings['openai_model'] ?? "o4-mini"),
+            'openai_model' => ($_settings['openai_model'] ?? "gpt-5.1"),
             'request_template' => ($_settings['request_template'] ?? ""),
             'test_url' => ($_settings['test_url'] ?? ""),
             'test_image' => ($_settings['test_image'] ?? ""),
+            'test_characters' => ($_settings['test_characters'] ?? ""),
         ];
 
         $this->view->assign('cron', '[путь до интерпретатора]php ' . wa()->getConfig()->getRootPath() . '/cli.php shop OpenaiPluginProcess');

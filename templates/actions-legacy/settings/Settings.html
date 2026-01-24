@@ -110,10 +110,18 @@
     </div>
 
     <div class="field">
+        <div class="name">Характеристики для теста</div>
+        <div class="value">
+            <textarea style="height: auto; width: 100%" class="test_characters" rows=3 name="settings[test_characters]">{ifset($settings.test_characters)|escape}</textarea>
+        </div>
+    </div>
+
+    <div class="field">
         <div class="name">Шаблон запроса</div>
         <div class="value">
             <textarea style="height: auto; width: 100%" class="test_request" rows=30 name="settings[request_template]">{ifset($settings.request_template)|escape}</textarea>
-            <p class="hint">Макросы: <span class="kbds">@url</span> - ссылка на страницу с товаром</p>
+            <p class="hint">Макросы: <span class="kbds">@url</span> - ссылка на страницу с товаром, <span class="kbds">@characters</span>
+                - характеристики товара</p>
         </div>
     </div>
 
@@ -150,12 +158,14 @@
             ee.preventDefault();
             let testUrl = $(".test_url").val();
             let testImage = $(".test_image").val();
+            let testCharacters = $(".test_characters").val();
             let testRequest = $(".test_request").val();
             $(".openai_loader").show();
             $("#error_text").hide();
             $.getJSON('?module=openai&action=PluginBackendAjax', {
                 testUrl: testUrl,
                 testImage: testImage,
+                testCharacters: testCharacters,
                 testRequest: testRequest
             }, function (json) {
                 $("#openai_test_result").val(json.data.status_text);

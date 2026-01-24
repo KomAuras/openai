@@ -3,6 +3,12 @@
 class shopOpenaiPluginProcessCli extends waCliController
 {
     const FILE_LOG = 'shop/plugins/openai/openai.cli.log';
+    private shopFeatureModel $feature;
+
+    public function __construct()
+    {
+        $this->feature = new shopFeatureModel();
+    }
 
     public function execute()
     {
@@ -97,9 +103,11 @@ class shopOpenaiPluginProcessCli extends waCliController
             }
 
             $url = $product->getProductUrl(true, true, false);
+            $characters = $this->getFeatures($product);
+
             // обрабатываем ссылку в openai по шаблону
             try {
-                $result = $class->getDataResponce($url, $imageUrl);
+                $result = $class->getDataResponce($url, $imageUrl, "", $characters);
                 echo "обработали: " . $productID . " " . $url . "\n";
             } catch (Exception $e) {
                 waLog::log("Исключение при обращении к openai: " . $e->getMessage(), $this::FILE_LOG);
@@ -176,6 +184,30 @@ class shopOpenaiPluginProcessCli extends waCliController
                 $result .= "<li>{$character}</li>\n";
             }
             $result .= "</ul>\n";
+        }
+        return $result;
+    }
+
+    private function getFeatures($product): string
+    {
+        $result = "";
+        foreach ($product->getFeatures('public') as $key => $value) {
+            $result .= $this->feature->getByCode($key)['name'] . ": ";
+            if (is_array($value)) {
+                if (count($value)) {
+                    $counter = 0;
+                    foreach ($value as $item) {
+                        if ($counter) {
+                            $result .= ", ";
+                        }
+                        $result .= $item;
+                        $counter += 1;
+                    }
+                    $result .= "\n";
+                }
+            } else {
+                $result .= $value . "\n";
+            }
         }
         return $result;
     }

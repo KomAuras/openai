@@ -51,7 +51,7 @@ class shopOpenaiPluginBase
      * - json - результат декодированный из JSON
      * - error - текст ошибки если была
      */
-    public function getDataResponce(string $url, string $image = "", string $template = ""): array
+    public function getDataResponce(string $url, string $image = "", string $template = "", string $characters = ""): array
     {
         $result = [
             'response' => "",
@@ -59,7 +59,7 @@ class shopOpenaiPluginBase
             'error' => ""
         ];
 
-        $text = $this->getTextFromTemplate($url, $template);
+        $text = $this->getTextFromTemplate($url, $template, $characters);
 
         $response = $this->client->chat()->create([
             'model' => $this->openai_model,
@@ -98,9 +98,12 @@ class shopOpenaiPluginBase
      * @param string $template
      * @return array|string|string[]
      */
-    public function getTextFromTemplate(string $url, string $template): string|array
+    public function getTextFromTemplate(string $url, string $template, string $characters): string|array
     {
-        return str_ireplace('@url', $url, ($template == "" ? $this->request_template : $template));
+        $result = ($template == "" ? $this->request_template : $template);
+        $result = str_ireplace('@url', $url, $result);
+        $result = str_ireplace('@characters', $characters, $result);
+        return $result;
     }
 }
 
