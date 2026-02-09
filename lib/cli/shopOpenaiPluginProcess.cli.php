@@ -94,7 +94,7 @@ class shopOpenaiPluginProcessCli extends waCliController
              * что бы в случае невозможности ее снятия не скрипт не долбился в
              * openai до бесконечности
              */
-            $features = ['openai' => 0];
+            $features = ['openai' => 0,'openai_completed' => 1];
             try {
                 $pf->setData($product, $features);
             } catch (waDbException $e) {
