@@ -11,6 +11,7 @@ class shopOpenaiPluginBase
     private $api_key;
     private $openai_model;
     private $request_template;
+    private $category_template;
     private \OpenAI\Client $client;
 
     public function __construct()
@@ -24,6 +25,7 @@ class shopOpenaiPluginBase
         $this->checkVar($s, $this->api_key, 'api_key', "Установите OpenAI ApiKey");
         $this->checkVar($s, $this->openai_model, 'openai_model', "Установите OpenAI model");
         $this->checkVar($s, $this->request_template, 'request_template', "Установите шаблон");
+        $this->checkVar($s, $this->category_template, 'category_template', "Установите шаблон категории");
 
         $this->client = \OpenAI::factory()
             ->withApiKey($this->api_key)
@@ -45,13 +47,15 @@ class shopOpenaiPluginBase
     /**
      * Получаем результат от openai по шаблону
      * @param $url string ссылка на товар
+     * @param $image string ссылка на картинку товара
      * @param $template string текст шаблона
+     * @param $template string список характеритик товара
      * @return array
      * - response - сырой результат запроса к openai
      * - json - результат декодированный из JSON
      * - error - текст ошибки если была
      */
-    public function getDataResponce(string $url, string $image = "", string $template = "", string $characters = ""): array
+    public function getProductResponce(string $url, string $image = "", string $template = "", string $characters = ""): array
     {
         $result = [
             'response' => "",
@@ -59,7 +63,7 @@ class shopOpenaiPluginBase
             'error' => ""
         ];
 
-        $text = $this->getTextFromTemplate($url, $template, $characters);
+        $text = $this->getTextFromProductTemplate($url, $template, $characters);
 
         $response = $this->client->chat()->create([
             'model' => $this->openai_model,
@@ -77,6 +81,7 @@ class shopOpenaiPluginBase
         try {
             $result['response'] = $response->choices[0]->message->content;
             try {
+                waLog::dump($result['response']);
                 $json = json_decode($result['response'], true);
                 if (json_last_error()) {
                     throw new Exception("Ошибка декодирования JSON: " . json_last_error_msg());
@@ -93,16 +98,78 @@ class shopOpenaiPluginBase
     }
 
     /**
-     * Получение текста из ссылки и шаблона
+     * Получаем результат от openai по шаблону на категорию
+     * @param $url string ссылка на категорию
+     * @param $name string название категории
+     * @param $template string текст шаблона
+     * @return array
+     * - response - сырой результат запроса к openai
+     * - json - результат декодированный из JSON
+     * - error - текст ошибки если была
+     */
+    public function getCategoryResponce(string $url, string $name = "", string $template = ""): array
+    {
+        $result = [
+            'response' => "",
+            'json' => "",
+            'error' => ""
+        ];
+
+        $text = $this->getTextFromCategoryTemplate($url, $name, $template);
+
+        $response = $this->client->chat()->create([
+            'model' => $this->openai_model,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        ['type' => 'text', 'text' => $text],
+                    ],
+                ],
+            ],
+        ]);
+
+        try {
+            $result['response'] = $response->choices[0]->message->content;
+            try {
+                $result['json'] = $result['response'];
+            } catch (Exception $e) {
+                $result['error'] = $e->getMessage();
+            }
+
+        } catch (Exception $e) {
+            $result['error'] = $e->getMessage();
+        }
+        return $result;
+    }
+
+    /**
+     * Получение текста из ссылки и шаблона товара
      * @param string $url
      * @param string $template
+     * @param string $characters
      * @return array|string|string[]
      */
-    public function getTextFromTemplate(string $url, string $template, string $characters): string|array
+    public function getTextFromProductTemplate(string $url, string $template, string $characters): string|array
     {
         $result = ($template == "" ? $this->request_template : $template);
         $result = str_ireplace('@url', $url, $result);
         $result = str_ireplace('@characters', $characters, $result);
+        return $result;
+    }
+
+    /**
+     * Получение текста из ссылки и шаблона категории
+     * @param string $url
+     * @param string $name
+     * @param string $template
+     * @return array|string|string[]
+     */
+    public function getTextFromCategoryTemplate(string $url, string $name, string $template): string|array
+    {
+        $result = ($template == "" ? $this->category_template : $template);
+        $result = str_ireplace('@url', $url, $result);
+        $result = str_ireplace('@name', $name, $result);
         return $result;
     }
 }

@@ -6,6 +6,7 @@ class shopOpenaiPluginBackendAjaxController extends waJsonController
 
     public function execute(): array
     {
+
         $testUrl = $_GET['testUrl'];
         if ($testUrl == "") {
             return $this->setResult("", "Установите тестовую ссылку");
@@ -28,15 +29,11 @@ class shopOpenaiPluginBackendAjaxController extends waJsonController
 
         try {
             $class = new shopOpenaiPluginBase();
-            $result = $class->getDataResponce($testUrl, $testImage, $testRequest, $testCharacters);
+            $result = $class->getProductResponce($testUrl, $testImage, $testRequest, $testCharacters);
         } catch (Exception $e) {
             $result['error'] = $e->getMessage();
         }
-        waLog::log($testRequest, $this::FILE_LOG);
-        waLog::log($testUrl, $this::FILE_LOG);
-        waLog::log($testImage, $this::FILE_LOG);
-        waLog::log($testCharacters, $this::FILE_LOG);
-        waLog::dump($result, $this::FILE_LOG);
+
         return $this->setResult($result['response'], $result['error']);
     }
 

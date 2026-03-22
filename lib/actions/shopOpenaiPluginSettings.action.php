@@ -17,6 +17,9 @@ class shopOpenaiPluginSettingsAction extends waViewAction
             'test_url' => ($_settings['test_url'] ?? ""),
             'test_image' => ($_settings['test_image'] ?? ""),
             'test_characters' => ($_settings['test_characters'] ?? ""),
+            'test_category' => ($_settings['test_category'] ?? ""),
+            'test_category_url' => ($_settings['test_category_url'] ?? ""),
+            'category_template' => ($_settings['category_template'] ?? ""),
         ];
 
         $this->view->assign('cron', '[путь до интерпретатора]php ' . wa()->getConfig()->getRootPath() . '/cli.php shop OpenaiPluginProcess');
