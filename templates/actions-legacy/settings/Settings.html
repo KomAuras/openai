@@ -134,6 +134,17 @@
         </ul>
     </div>
 
+    <button class="cfgBtn" type="button" data-target="cfgRun">Запуск обработок</button>
+    <div id="cfgRun" style="display: none;">
+
+        <div style="padding: 10px">
+            <input type="submit" class="button red call_openai_category" value="Запустить обработку категорий">
+            <span id="category_process_status"></span>
+            <p class="hint">В отличии от товара, обрабатываются все категории магазина</p>
+        </div>
+
+    </div>
+
     <p></p>
     <hr>
 
@@ -258,7 +269,11 @@
 {literal}
 <script type="text/javascript">
 
+    var pollingInterval = 0;
+
     $(document).ready(function () {
+
+        startPollingStatus();
 
         // 1. Вешаем один обработчик на document для всех кнопок с классом .cfgBtn
         $(document).on('click', '.cfgBtn', function () {
@@ -300,36 +315,6 @@
             $textarea.focus();
         });
 
-        $('.call_openai_test_category').bind('click', function (ee) {
-
-            ee.preventDefault();
-            let testUrl = $(".test_category_url").val();
-            let testName = $(".test_category").val();
-            let testRequest = $(".test_request_category").val();
-            $(".openai_loader_category").show();
-            $("#error_text_category").hide();
-
-            $.getJSON('?module=openai&action=PluginBackendCategoryAjax', {
-                testUrl: testUrl,
-                testName: testName,
-                testRequest: testRequest
-
-            }, function (json) {
-                $("#openai_test_result_category").val(json.data.status_text);
-                $("#error_text_category").text(json.data.error_text);
-                $(".openai_loader_category").hide();
-                $("#error_text_category").show();
-
-            }).fail(function () {
-                $("#error_text_category").text(json.data.error_text);
-                $(".openai_loader_category").hide();
-                $("#error_text_category").show();
-                alert("Ошибка при выполнении Ajax запроса.");
-
-            });
-
-        });
-
         $('.call_openai_test').bind('click', function (ee) {
 
             ee.preventDefault();
@@ -340,7 +325,7 @@
             $(".openai_loader").show();
             $("#error_text").hide();
 
-            $.getJSON('?module=openai&action=PluginBackendAjax', {
+            $.getJSON('?plugin=openai&module=backend&action=getProductDescription', {
                 testUrl: testUrl,
                 testImage: testImage,
                 testCharacters: testCharacters,
@@ -361,6 +346,97 @@
             });
 
         });
+
+        $('.call_openai_test_category').bind('click', function (ee) {
+
+            ee.preventDefault();
+            let testUrl = $(".test_category_url").val();
+            let testName = $(".test_category").val();
+            let testRequest = $(".test_request_category").val();
+            $(".openai_loader_category").show();
+            $("#error_text_category").hide();
+
+            $.getJSON('?plugin=openai&module=backend&action=getCategoryDescription', {
+                testUrl: testUrl,
+                testName: testName,
+                testRequest: testRequest
+
+            }, function (json) {
+                $("#openai_test_result_category").val(json.data.status_text);
+                $("#error_text_category").text(json.data.error_text);
+                $(".openai_loader_category").hide();
+                $("#error_text_category").show();
+
+            }).fail(function () {
+                $("#error_text_category").text(json.data.error_text);
+                $(".openai_loader_category").hide();
+                $("#error_text_category").show();
+                alert("Ошибка при выполнении Ajax запроса.");
+
+            });
+
+        });
+
+        $('.call_openai_category').bind('click', function (ee) {
+
+            ee.preventDefault();
+            $.getJSON('?plugin=openai&module=process&action=startCategoryProcess', {}, function (res) {
+                updateUI(res);
+            }).fail(function () {
+                alert("Ошибка при выполнении Ajax запроса.");
+            });
+
+        });
+
+        function startPollingStatus() {
+            if (pollingInterval > 0) {
+                return;
+            }
+            pollingInterval = setInterval(function () {
+                console.log('start');
+                $.getJSON('?plugin=openai&module=process&action=getCategoryProcessStatus', {}, function (res) {
+                    updateUI(res);
+                });
+            }, 4000); // Проверяем каждые 2 секунды
+            console.log('end startPollingStatus' + pollingInterval.toString());
+        }
+
+        function updateUI(res) {
+            if (res.status !== 'ok') {
+                $("#category_process_status").text('Ajax не вернул OK!');
+                clearInterval(pollingInterval);
+                return;
+            }
+            data = res.data;
+            if (data.status === 'started') {
+                $("#category_process_status").text('Запустили');
+                startPollingStatus();
+            } else if (data.status === 'running') {
+                if (data.total > 0) {
+                    $("#category_process_status").text("Выполнено " + data.processed.toString() + " из " + data.total.toString());
+                } else {
+                    $("#category_process_status").text("Запускается");
+                }
+                startPollingStatus();
+            } else if (data.status === 'already_running') {
+                $("#category_process_status").text('Процесс уже запущен!');
+                startPollingStatus();
+            } else if (data.status === 'not_started') {
+                $("#category_process_status").text('В ожидании запуска...');
+                startPollingStatus();
+            } else if (data.status === 'completed') {
+                $("#category_process_status").text('Закончили');
+                stopPooling()
+            } else if (data.status === 'error') {
+                $("#category_process_status").text('Произошла ошибка в процессе выполнения!');
+                stopPooling();
+            }
+        }
+
+        function stopPooling() {
+            clearInterval(pollingInterval);
+            pollingInterval = 0;
+        }
 
     });
 

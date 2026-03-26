@@ -1,6 +1,6 @@
 <?php
 
-require('vendor/autoload.php');
+require_once __DIR__ . '/vendor/autoload.php';
 
 class shopOpenaiPluginBase
 {
@@ -81,7 +81,6 @@ class shopOpenaiPluginBase
         try {
             $result['response'] = $response->choices[0]->message->content;
             try {
-                waLog::dump($result['response']);
                 $json = json_decode($result['response'], true);
                 if (json_last_error()) {
                     throw new Exception("Ошибка декодирования JSON: " . json_last_error_msg());
@@ -173,5 +172,3 @@ class shopOpenaiPluginBase
         return $result;
     }
 }
-
-

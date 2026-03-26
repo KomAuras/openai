@@ -1,0 +1,1 @@
+php C:\OSPanel\home\localhost\cli.php shop OpenaiPluginInternalProcess
