@@ -16,6 +16,8 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
     public function execute()
     {
         $data = $this->getCategories();
+        $total = $data->count();
+
         if ($data->count() == 0) {
             return;
         }
@@ -26,10 +28,10 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
             $class = new shopOpenaiPluginBase();
         } catch (Exception $e) {
             waLog::log("Исключение при получении класса: " . $e->getMessage(), $this::FILE_LOG);
+            $this->setError();
             die();
         }
 
-        $total = $data->count();
         file_put_contents($this->status_file, json_encode([
             'total' => $total,
             'processed' => 0,
@@ -50,30 +52,30 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
                 echo "обработали: " . $row['id'] . " " . $url . "\n";
             } catch (Exception $e) {
                 waLog::log("Исключение при обращении к openai: " . $e->getMessage(), $this::FILE_LOG);
+                $this->setError();
                 die();
             }
+
             // обрабатываем ошибки получения запроса
             if ($result['error'] != "") {
                 waLog::log("Ошибка при получении запроса: " . $result['error'], $this::FILE_LOG);
+                $this->setError();
                 die();
             }
 
             $description = $result['json'];
 
-            // обновляем некоторые поля категории
-//            $product = new shopProduct($row['product_id']);
-//            $description = $this->getDescription($json);
-//            $data = [
-//                'name' => $json['name'],
-//                'description' => $description
-//            ];
-//            try {
-//                $product->save($data);
-//                waLog::log("Сохранили: {$row['product_id']}", $this::FILE_LOG);
-//            } catch (waDbException $e) {
-//                waLog::log("Исключение при записи товара: " . $e->getMessage(), $this::FILE_LOG);
-//                die();
-//            }
+            try {
+                $data = array(
+                    'description' => $description,
+                );
+                $this->category->update($row['id'], $data);
+                waLog::log("Сохранили: {$row['id']}", $this::FILE_LOG);
+            } catch (waDbException $e) {
+                waLog::log("Исключение при записи категории: " . $e->getMessage(), $this::FILE_LOG);
+                $this->setError();
+                die();
+            }
 
             // Обновляем статус
             file_put_contents($this->status_file, json_encode([
@@ -96,6 +98,15 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
 
     }
 
+    protected function setError(): void
+    {
+        file_put_contents($this->status_file, json_encode([
+            'total' => 0,
+            'processed' => 0,
+            'status' => 'error',
+        ]));
+    }
+
     protected function getCategories(): waDbResultSelect
     {
         $sql = <<<EOF
@@ -104,7 +115,9 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
                 c.name,
                 c.url
             FROM
-                shop_category c;
+                shop_category c
+            WHERE
+                c.id = 3152;
         EOF;
         $data = $this->category->query($sql);
         return $data;

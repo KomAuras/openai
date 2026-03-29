@@ -325,24 +325,29 @@
             $(".openai_loader").show();
             $("#error_text").hide();
 
-            $.getJSON('?plugin=openai&module=backend&action=getProductDescription', {
-                testUrl: testUrl,
-                testImage: testImage,
-                testCharacters: testCharacters,
-                testRequest: testRequest
+            $.ajax({
+                url: '?plugin=openai&module=backend&action=getProductDescription',
+                type: 'POST',
+                data: {
+                    testUrl: testUrl,
+                    testImage: testImage,
+                    testCharacters: testCharacters,
+                    testRequest: testRequest
+                },
+                dataType: 'json',
+                success: function (json) {
+                    $("#openai_test_result").val(json.data.status_text);
+                    $("#error_text").text(json.data.error_text);
+                    $(".openai_loader").hide();
+                    $("#error_text").show();
 
-            }, function (json) {
-                $("#openai_test_result").val(json.data.status_text);
-                $("#error_text").text(json.data.error_text);
-                $(".openai_loader").hide();
-                $("#error_text").show();
+                },
+                error: function (xhr, status, error) {
+                    $("#error_text").text(error);
+                    $(".openai_loader").hide();
+                    $("#error_text").show();
 
-            }).fail(function () {
-                $("#error_text").text(json.data.error_text);
-                $(".openai_loader").hide();
-                $("#error_text").show();
-                alert("Ошибка при выполнении Ajax запроса.");
-
+                }
             });
 
         });
@@ -356,23 +361,28 @@
             $(".openai_loader_category").show();
             $("#error_text_category").hide();
 
-            $.getJSON('?plugin=openai&module=backend&action=getCategoryDescription', {
-                testUrl: testUrl,
-                testName: testName,
-                testRequest: testRequest
+            $.ajax({
+                url: '?plugin=openai&module=backend&action=getCategoryDescription',
+                type: 'POST',
+                data: {
+                    testUrl: testUrl,
+                    testName: testName,
+                    testRequest: testRequest
+                },
+                dataType: 'json',
+                success: function (json) {
+                    $("#openai_test_result_category").val(json.data.status_text);
+                    $("#error_text_category").text(json.data.error_text);
+                    $(".openai_loader_category").hide();
+                    $("#error_text_category").show();
 
-            }, function (json) {
-                $("#openai_test_result_category").val(json.data.status_text);
-                $("#error_text_category").text(json.data.error_text);
-                $(".openai_loader_category").hide();
-                $("#error_text_category").show();
+                },
+                error: function (xhr, status, error) {
+                    $("#error_text_category").text(error);
+                    $(".openai_loader_category").hide();
+                    $("#error_text_category").show();
 
-            }).fail(function () {
-                $("#error_text_category").text(json.data.error_text);
-                $(".openai_loader_category").hide();
-                $("#error_text_category").show();
-                alert("Ошибка при выполнении Ajax запроса.");
-
+                }
             });
 
         });
@@ -382,8 +392,8 @@
             ee.preventDefault();
             $.getJSON('?plugin=openai&module=process&action=startCategoryProcess', {}, function (res) {
                 updateUI(res);
-            }).fail(function () {
-                alert("Ошибка при выполнении Ajax запроса.");
+            }).fail(function (xhr, status, error) {
+                alert("Ошибка при выполнении Ajax запроса: " + error.toString());
             });
 
         });

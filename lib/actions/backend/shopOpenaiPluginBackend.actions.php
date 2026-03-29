@@ -6,23 +6,24 @@ class shopOpenaiPluginBackendActions extends waJsonActions
 
     public function getProductDescriptionAction(): array
     {
+        $data = waRequest::post();
 
-        $testUrl = $_GET['testUrl'];
+        $testUrl = $data['testUrl'];
         if ($testUrl == "") {
             return $this->setResult("", "Установите тестовую ссылку");
         }
 
-        $testImage = $_GET['testImage'];
+        $testImage = $data['testImage'];
         if ($testImage == "") {
             return $this->setResult("", "Установите тестовую картинку");
         }
 
-        $testCharacters = $_GET['testCharacters'];
+        $testCharacters = $data['testCharacters'];
         if ($testCharacters == "") {
             return $this->setResult("", "Установите характеристики для теста]");
         }
 
-        $testRequest = $_GET['testRequest'];
+        $testRequest = $data['testRequest'];
         if ($testRequest == "") {
             return $this->setResult("", "Установите шаблон");
         }
@@ -42,17 +43,19 @@ class shopOpenaiPluginBackendActions extends waJsonActions
     public function getCategoryDescriptionAction(): array
     {
 
-        $testUrl = $_GET['testUrl'];
+        $data = waRequest::post();
+
+        $testUrl = $data['testUrl'];
         if ($testUrl == "") {
             return $this->setResult("", "Установите тестовую ссылку на категорию");
         }
 
-        $testName = $_GET['testName'];
+        $testName = $data['testName'];
         if ($testName == "") {
             return $this->setResult("", "Установите наименование категории");
         }
 
-        $testRequest = $_GET['testRequest'];
+        $testRequest = $data['testRequest'];
         if ($testRequest == "") {
             return $this->setResult("", "Установите шаблон категории");
         }
