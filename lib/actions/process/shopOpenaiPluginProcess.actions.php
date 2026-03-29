@@ -14,7 +14,8 @@ class shopOpenaiPluginProcessActions extends waJsonActions
         // Проверяем, не запущен ли уже процесс
         if ($this->isLinux() && file_exists($pid_file)) {
             $pid = file_get_contents($pid_file);
-            if (posix_kill($pid, 0)) {
+            //if (posix_kill($pid, 0)) {
+            if ($this->isProcessRunning($pid)) {
                 return $this->response = ['status' => 'already_running', 'pid' => $pid];
             } else {
                 unlink($pid_file); // Удаляем старый PID, если процесс не существует
@@ -22,26 +23,48 @@ class shopOpenaiPluginProcessActions extends waJsonActions
         }
 
         // Запускаем CLI-скрипт в фоне
-        $command = 'php ' . wa()->getConfig()->getRootPath() . '/cli.php shop OpenaiPluginInternalProcess > /dev/null 2>&1 & echo $!';
-        exec($command, $output);
-        if ($this->isLinux()) {
-            $pid = (int)$output[0];
-        } else {
-            $pid = 0;
+        try {
+
+            $command = '/opt/php82/bin/php ' . wa()->getConfig()->getRootPath() . '/cli.php shop OpenaiPluginInternalProcess > /dev/null 2>&1 & echo $!';
+            exec($command, $output);
+            if ($this->isLinux()) {
+                $pid = (int)$output[0];
+            } else {
+                $pid = 0;
+            }
+
+            // Сохраняем PID
+            file_put_contents($pid_file, $pid);
+
+            // Инициализируем статус
+            file_put_contents($status_file, json_encode([
+                'total' => 0,
+                'processed' => 0,
+                'status' => 'running',
+                'started_at' => time()
+            ]));
+
+        } catch (\Exception $e) {
+
+            // Инициализируем статус
+            file_put_contents($status_file, json_encode([
+                'total' => 0,
+                'processed' => 0,
+                'status' => 'error',
+                'started_at' => time()
+            ]));
         }
-
-        // Сохраняем PID
-        file_put_contents($pid_file, $pid);
-
-        // Инициализируем статус
-        file_put_contents($status_file, json_encode([
-            'total' => 0,
-            'processed' => 0,
-            'status' => 'running',
-            'started_at' => time()
-        ]));
-
         return $this->response = ['status' => 'started', 'pid' => $pid];
+    }
+
+    private function isProcessRunning($pid): bool
+    {
+        $handle = @fopen("/proc/$pid/cmdline", "r");
+        if ($handle) {
+            fclose($handle);
+            return true;
+        }
+        return false;
     }
 
     public function getCategoryProcessStatusAction(): array

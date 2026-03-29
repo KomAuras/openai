@@ -30,7 +30,7 @@ class shopOpenaiPluginBackendActions extends waJsonActions
 
         try {
             $class = new shopOpenaiPluginBase();
-            waLog::log("$testUrl\n$testImage\n$testRequest\n$testCharacters\n", self::FILE_LOG);
+            waLog::dump("$testUrl\n$testImage\n$testRequest\n$testCharacters\n", self::FILE_LOG);
             $result = $class->getProductResponce($testUrl, $testImage, $testRequest, $testCharacters);
             waLog::dump($result, self::FILE_LOG);
         } catch (Exception $e) {
@@ -62,7 +62,7 @@ class shopOpenaiPluginBackendActions extends waJsonActions
 
         try {
             $class = new shopOpenaiPluginBase();
-            waLog::log("$testUrl\n$testName\n$testRequest\n", self::FILE_LOG);
+            waLog::dump("$testUrl\n$testName\n$testRequest\n", self::FILE_LOG);
             $result = $class->getCategoryResponce($testUrl, $testName, $testRequest);
             waLog::dump($result, self::FILE_LOG);
         } catch (Exception $e) {

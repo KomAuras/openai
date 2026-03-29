@@ -116,8 +116,6 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
                 c.url
             FROM
                 shop_category c
-            WHERE
-                c.id = 3152;
         EOF;
         $data = $this->category->query($sql);
         return $data;

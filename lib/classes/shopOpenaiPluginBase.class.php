@@ -27,8 +27,6 @@ class shopOpenaiPluginBase
         $this->checkVar($s, $this->request_template, 'request_template', "Установите шаблон");
         $this->checkVar($s, $this->category_template, 'category_template', "Установите шаблон категории");
 
-        waLog::dump("http://{$this->proxy_login}:{$this->proxy_password}@{$this->proxy_address}:{$this->proxy_port}");
-
         $this->client = \OpenAI::factory()
             ->withApiKey($this->api_key)
             ->withHttpClient($client = new \GuzzleHttp\Client([
@@ -131,11 +129,9 @@ class shopOpenaiPluginBase
                 ],
             ],
         ];
-        waLog::dump($data);
 
         try {
             $response = $this->client->chat()->create($data);
-            waLog::dump($response);
 
             $result['response'] = $response->choices[0]->message->content;
             try {
@@ -145,7 +141,6 @@ class shopOpenaiPluginBase
             }
 
         } catch (Exception $e) {
-            waLog::dump($e->getMessage());
             $result['error'] = $e->getMessage();
         }
         return $result;
