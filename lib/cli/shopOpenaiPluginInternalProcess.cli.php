@@ -5,10 +5,12 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
     const FILE_LOG = 'shop/plugins/openai/openai.cli.log';
     private shopCategoryModel $category;
     private string $status_file;
+    private shopCategoryParamsModel $categoryParams;
 
     public function __construct()
     {
         $this->category = new shopCategoryModel();
+        $this->categoryParams = new shopCategoryParamsModel();
         $temp_path = wa()->getTempPath('openai', 'shop');
         $this->status_file = $temp_path . '/process_status.json';
     }
@@ -38,10 +40,23 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
             'status' => 'running',
         ]));
 
-        $i = 1;
+        $i = 0;
         foreach ($data as $row) {
-            //TODO: УБРАТЬ ПОСЛЕ ТЕСТИРОВАНИЯ ==========================================================
-            usleep(50000); // 0.05 сек на запись
+
+            $i++;
+            // Обновляем статус
+            file_put_contents($this->status_file, json_encode([
+                'total' => $total,
+                'processed' => $i,
+                'status' => 'running',
+            ]));
+
+            $params = $this->categoryParams->get($row['id']);
+            if (isset($params) && key_exists('openai', $params)) {
+                if ($params['openai'] == 1) {
+                    continue;
+                }
+            }
 
             $name = $row['name'];
             $url = "https://myjewels.ru/category/" . $row['url'];
@@ -58,14 +73,22 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
 
             // обрабатываем ошибки получения запроса
             if ($result['error'] != "") {
+                waLog::dump($result);
                 waLog::log("Ошибка при получении запроса: " . $result['error'], $this::FILE_LOG);
                 $this->setError();
                 die();
             }
 
-            $description = $result['json'];
 
             try {
+
+                $params = $this->categoryParams->get($row['id']);
+                if (isset($params)) {
+                    $params['openai'] = 1;
+                    $this->categoryParams->set($row['id'], $params);
+                }
+
+                $description = $result['json'];
                 $data = array(
                     'description' => $description,
                 );
@@ -77,14 +100,6 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
                 die();
             }
 
-            // Обновляем статус
-            file_put_contents($this->status_file, json_encode([
-                'total' => $total,
-                'processed' => $i,
-                'status' => 'running',
-            ]));
-
-            $i++;
         }
 
         waLog::log('Обработка категорий завершена', $this::FILE_LOG);

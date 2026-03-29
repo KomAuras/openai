@@ -1,0 +1,1 @@
+c:\sys\php\php C:\OSPanel\home\localhost\cli.php shop OpenaiPluginTest

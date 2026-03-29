@@ -12,7 +12,7 @@ class shopOpenaiPluginProcessCli extends waCliController
 
     public function execute()
     {
-        $lockFile = wa()->getTempPath() . "openai.lock";
+        $lockFile = wa()->getTempPath('openai', 'shop') . "openai_products.lock";
         $fp = fopen($lockFile, 'w'); // Открываем файл (создаст, если не существует)
         if (flock($fp, LOCK_EX | LOCK_NB)) {
             //sleep(25);
@@ -44,7 +44,7 @@ class shopOpenaiPluginProcessCli extends waCliController
             JOIN shop_product_features as pf on pf.product_id = p.id
             JOIN shop_feature as f on f.code = 'openai' and f.id = pf.feature_id
         WHERE
-	        pf.feature_value_id = 1
+            pf.feature_value_id = 1
         */
 
         $sql = <<<EOF
