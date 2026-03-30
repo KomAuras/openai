@@ -75,7 +75,7 @@ class shopOpenaiPluginProcessActions extends waJsonActions
 
     private function startWindowsProcess(): int
     {
-        $phpExe = 'C:\\sys\\php\\php.exe';
+        $phpExe = 'php.exe';
         $cliPhp = wa()->getConfig()->getRootPath() . '\\cli.php';
 
         $psCommand =
