@@ -42,7 +42,7 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
 
         $i = 0;
         foreach ($data as $row) {
-
+            usleep(1000000);
             $i++;
             // Обновляем статус
             file_put_contents($this->status_file, json_encode([
@@ -50,6 +50,8 @@ class shopOpenaiPluginInternalProcessCli extends waCliController
                 'processed' => $i,
                 'status' => 'running',
             ]));
+            waLog::log($i, $this::FILE_LOG);
+            continue;
 
             $params = $this->categoryParams->get($row['id']);
             if (isset($params) && key_exists('openai', $params)) {

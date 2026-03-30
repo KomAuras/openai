@@ -390,11 +390,15 @@
         $('.call_openai_category').bind('click', function (ee) {
 
             ee.preventDefault();
-            $.getJSON('?plugin=openai&module=process&action=startCategoryProcess', {}, function (res) {
-                updateUI(res);
-            }).fail(function (xhr, status, error) {
-                alert("Ошибка при выполнении Ajax запроса: " + error.toString());
-            });
+            if (confirm("Вы уверены, что хотите запустить процесс?")) {
+                $.getJSON('?plugin=openai&module=process&action=startCategoryProcess', {}, function (res) {
+                    updateUI(res);
+                }).fail(function (xhr, status, error) {
+                    alert("Ошибка при выполнении Ajax запроса: " + error.toString());
+                });
+            } else {
+                return;
+            }
 
         });
 

@@ -1,3 +1,8 @@
+для старта процесса категорий нужна функция posix_getpgid
+для этого нужно включить в php расширение posix
+и отключить в настройках php функции:
+posix_kill,posix_setsid,posix_setuid,posix_setgid,posix_seteuid,posix_setegid,posix_initgroups,posix_getpwnam,posix_getgrnam,posix_getpwuid,posix_getgrgid,posix_getpid,posix_getppid,posix_getuid,posix_geteuid,posix_getgid,posix_getegid,posix_getlogin,posix_ttyname,posix_times,posix_uname
+===============================================================
 1. Получи основное фото товара напрямую с сайта по @URL
 2. Сгенерируй:
 

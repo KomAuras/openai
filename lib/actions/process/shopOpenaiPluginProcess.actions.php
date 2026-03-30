@@ -12,25 +12,27 @@ class shopOpenaiPluginProcessActions extends waJsonActions
         $status_file = $temp_path . '/process_status.json';
 
         // Проверяем, не запущен ли уже процесс
-        if ($this->isLinux() && file_exists($pid_file)) {
-            $pid = file_get_contents($pid_file);
-            //if (posix_kill($pid, 0)) {
-            if ($this->isProcessRunning($pid)) {
+        if (file_exists($pid_file)) {
+            $pid = (int)trim(file_get_contents($pid_file));
+            if ($pid > 0 && $this->isProcessRunning($pid)) {
                 return $this->response = ['status' => 'already_running', 'pid' => $pid];
             } else {
-                unlink($pid_file); // Удаляем старый PID, если процесс не существует
+                @unlink($pid_file);
             }
         }
 
         // Запускаем CLI-скрипт в фоне
         try {
 
-            $command = '/opt/php82/bin/php ' . wa()->getConfig()->getRootPath() . '/cli.php shop OpenaiPluginInternalProcess > /dev/null 2>&1 & echo $!';
-            exec($command, $output);
             if ($this->isLinux()) {
-                $pid = (int)$output[0];
+                $command = '/opt/php82/bin/php '
+                    . escapeshellarg(wa()->getConfig()->getRootPath() . '/cli.php')
+                    . ' shop OpenaiPluginInternalProcess > /dev/null 2>&1 & echo $!';
+
+                exec($command, $output);
+                $pid = isset($output[0]) ? (int)$output[0] : 0;
             } else {
-                $pid = 0;
+                $pid = $this->startWindowsProcess();
             }
 
             // Сохраняем PID
@@ -57,16 +59,6 @@ class shopOpenaiPluginProcessActions extends waJsonActions
         return $this->response = ['status' => 'started', 'pid' => $pid];
     }
 
-    private function isProcessRunning($pid): bool
-    {
-        $handle = @fopen("/proc/$pid/cmdline", "r");
-        if ($handle) {
-            fclose($handle);
-            return true;
-        }
-        return false;
-    }
-
     public function getCategoryProcessStatusAction(): array
     {
         $temp_path = wa()->getTempPath('openai', 'shop');
@@ -81,8 +73,72 @@ class shopOpenaiPluginProcessActions extends waJsonActions
         return $this->response = ['status' => $data['status'], 'processed' => $data['processed'], 'total' => $data['total']];
     }
 
+    private function startWindowsProcess(): int
+    {
+        $phpExe = 'C:\\sys\\php\\php.exe';
+        $cliPhp = wa()->getConfig()->getRootPath() . '\\cli.php';
+
+        $psCommand =
+            '$p = Start-Process -FilePath ' . $this->psQuote($phpExe) .
+            ' -ArgumentList @(' .
+            $this->psQuote($cliPhp) . ',' .
+            $this->psQuote('shop') . ',' .
+            $this->psQuote('OpenaiPluginInternalProcess') .
+            ') -WindowStyle Hidden -PassThru; ' .
+            '$p.Id';
+
+        $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ' . escapeshellarg($psCommand);
+
+        $output = [];
+        exec($cmd, $output);
+
+        return isset($output[0]) ? (int)trim($output[0]) : 0;
+    }
+
+    private function psQuote(string $value): string
+    {
+        return "'" . str_replace("'", "''", $value) . "'";
+    }
+
+    private function isProcessRunning($pid): bool
+    {
+        $pid = (int)$pid;
+        if ($pid <= 0) {
+            return false;
+        }
+
+        if ($this->isLinux()) {
+            //return is_dir("/proc/$pid");
+            return posix_getpgid($pid) !== false;
+        }
+
+        $output = [];
+        exec('tasklist /FI "PID eq ' . $pid . '" /FO CSV /NH 2>NUL', $output);
+
+        if (empty($output)) {
+            return false;
+        }
+
+        $line = trim($output[0]);
+
+        if ($line === '') {
+            return false;
+        }
+
+        if (stripos($line, 'No tasks are running') !== false) {
+            return false;
+        }
+
+        if (stripos($line, 'Информация:') !== false) {
+            return false;
+        }
+
+        return strpos($line, '"') === 0;
+    }
+
     protected function isLinux()
     {
         return !(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
     }
+
 }
